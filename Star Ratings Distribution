@@ -1,0 +1,31 @@
+	/* DISTRIBUTION OF STAR RATINGS OF OPEN RESTAURANTS USING PERCENTAGE OF REVIEWS FOR EVERY AVERAGE STAR RATINGS.*/
+	/* OBJECTIVE: Compute the percentage of reviews for every average star ratings of open retaurants. */
+	
+	/*Retrieve the operation status, or "is_open", and the average star rating, or "stars" column from business table. */
+	select 
+		business.is_open,
+		business.stars as star_rating,
+
+        /*Retrieve the total review count per average star ratings. */
+        sum(business.review_count) as review_per_star,
+
+        /*Retrieve the fixed total review count for all open businesses. */
+        cum_reviews.total_reviews,
+		
+		/*Compute the percentage of reviews for every average star ratings of open retaurants using the total review count per average star ratings divided by the fixed total review count computed using inner join clause.*/
+		cast(sum(business.review_count)*100/cum_reviews.total_reviews as real)
+		as rel_freq_percent
+
+	from business
+	
+	/*Make the inner join with the table that computes the fixed total review count for all open businesses. */
+	inner join (select is_open, stars,
+		sum(review_count) as total_reviews
+		from business group by is_open) as cum_reviews
+	on business.is_open = cum_reviews.is_open
+	
+	/*Group by average star ratings and the operation status to make sure we get the total review count per average star ratings. */
+	group by star_rating, business.is_open
+	
+	/*Retrict the query to open businesses. */
+	having business.is_open = 1
